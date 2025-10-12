@@ -4,6 +4,7 @@ import java.util.Arrays;
 public class Lesson1 {
 
     public static void main(String[] args) {
+        System.out.println("Урок 1");
         // Тестирование всех методов
         System.out.println("Задание 1");
         printThreeWords();
