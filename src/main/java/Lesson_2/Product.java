@@ -1,4 +1,5 @@
 package Lesson_2;
+
 public class Product {
     private final String name;
     private final String productionDate;

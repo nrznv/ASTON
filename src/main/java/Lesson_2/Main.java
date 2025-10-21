@@ -1,4 +1,5 @@
 package Lesson_2;
+
 public class Main {
     public static void main(String[] args) {
 
@@ -23,17 +24,15 @@ public class Main {
 
         System.out.println("Демонстрация работы класса Park");
 
-        // Создаем аттракционы напрямую через статический внутренний класс
-        Park.Attraction attraction1 = new Park.Attraction("Американские горки", "10:00-20:00", 350);
-        Park.Attraction attraction2 = new Park.Attraction("Колесо обозрения", "09:00-22:00", 200);
-        Park.Attraction attraction3 = new Park.Attraction("Комната страха", "12:00-23:00", 150);
+        Park centralPark = new Park("Центральный парк культуры и отдыха");
 
-        System.out.println("Информация об аттракционах парка:");
-        attraction1.displayAttractionInfo();
-        System.out.println();
-        attraction2.displayAttractionInfo();
-        System.out.println();
-        attraction3.displayAttractionInfo();
+        centralPark.addAttraction("Американские горки", "10:00-20:00", 350);
+        centralPark.addAttraction("Колесо обозрения", "09:00-22:00", 200);
+        centralPark.addAttraction("Комната страха", "12:00-23:00", 150);
+        centralPark.addAttraction("Автодром", "10:00-19:00", 250);
+        centralPark.addAttraction("Карусель", "10:00-18:00", 100);
+
+        centralPark.displayAllAttractions();
 
         System.out.println("Задание выполнено");
     }
