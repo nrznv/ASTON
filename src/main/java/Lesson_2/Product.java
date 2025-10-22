@@ -18,6 +18,14 @@ public class Product {
         this.isReserved = isReserved;
     }
 
+    // ГЕТТЕРЫ
+    public String getName() { return name; }
+    public String getProductionDate() { return productionDate; }
+    public String getManufacturer() { return manufacturer; }
+    public String getCountryOfOrigin() { return countryOfOrigin; }
+    public double getPrice() { return price; }
+    public boolean isReserved() { return isReserved; }
+
     public void printProductInfo() {
         System.out.println("Информация о товаре:");
         System.out.println("  Название: " + name);
