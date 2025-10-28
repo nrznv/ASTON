@@ -22,7 +22,7 @@ public class Main {
 
         System.out.println("КОТЫ ЕДЯТ ИЗ МИСКИ");
         for (Cat cat : cats) {
-            cat.eatFromBowl(bowl);
+            cat.eatFromBowl(bowl, 10);
         }
 
         System.out.println("ПРОВЕРКА СЫТОСТИ");
@@ -32,7 +32,7 @@ public class Main {
 
         System.out.println("ДОБАВЛЯЕМ ЕДУ");
         bowl.addFood(20);
-        cat1.eatFromBowl(bowl);
+        cat1.eatFromBowl(bowl, 10);
 
         System.out.println("СТАТИСТИКА");
         System.out.println("Всего животных: " + Animal.getAnimalCount());

@@ -45,8 +45,8 @@ public class Cat extends Animal {
         System.out.println(getName() + " не умеет плавать.");
     }
 
-    public void eatFromBowl(Bowl bowl) {
-        if (bowl.decreaseFood(10)) {
+    public void eatFromBowl(Bowl bowl, int desiredAmount) {
+        if (bowl.decreaseFood(desiredAmount)) {
             isFull = true;
             System.out.println(getName() + " поел и теперь сыт.");
         } else {
