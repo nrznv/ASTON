@@ -23,8 +23,8 @@ public class HomePage {
     @FindBy(xpath = "//*[contains(text(), 'Онлайн пополнение')]")
     private WebElement blockTitle;
 
-    @FindBy(tagName = "img")
-    private List<WebElement> allImages;
+    @FindBy(xpath = "//div[contains(@class, 'payment')]//img | //div[contains(@class, 'logo')]//img")
+    private List<WebElement> paymentLogos;
 
     @FindBy(partialLinkText = "Подробнее")
     private WebElement detailsLink;
@@ -52,16 +52,8 @@ public class HomePage {
 
     public int getPaymentLogosCount() {
         wait.until(ExpectedConditions.visibilityOf(blockTitle));
-
-        return (int) allImages.stream()
+        return (int) paymentLogos.stream()
                 .filter(WebElement::isDisplayed)
-                .filter(img -> {
-                    String src = img.getAttribute("src");
-                    String alt = img.getAttribute("alt");
-                    return src != null && (src.contains("payment") || src.contains("card") ||
-                            src.contains("visa") || src.contains("mastercard") ||
-                            (alt != null && alt.toLowerCase().contains("плате")));
-                })
                 .count();
     }
 
@@ -130,25 +122,49 @@ public class HomePage {
         System.out.println("ДЕБАГ ИНФОРМАЦИЯ");
         System.out.println("URL: " + driver.getCurrentUrl());
         System.out.println("Заголовок: " + driver.getTitle());
-        System.out.println("Всего изображений: " + allImages.size());
-        System.out.println("Видимых изображений: " + allImages.stream().filter(WebElement::isDisplayed).count());
+        System.out.println("Всего изображений в блоке платежей: " + paymentLogos.size());
+        System.out.println("Видимых изображений: " + paymentLogos.stream().filter(WebElement::isDisplayed).count());
 
-        allImages.stream()
+        paymentLogos.stream()
                 .filter(WebElement::isDisplayed)
-                .limit(10)
                 .forEach(img -> {
                     String src = img.getAttribute("src");
                     String alt = img.getAttribute("alt");
-                    System.out.println("Изображение: src=" + src + ", alt=" + alt);
+                    System.out.println("Изображение платежной системы: src=" + src + ", alt=" + alt);
                 });
     }
 
-    // ДОБАВЛЕННЫЕ МЕТОДЫ
     public String getPageTitle() {
         return driver.getTitle();
     }
 
     public String getCurrentUrl() {
         return driver.getCurrentUrl();
+    }
+
+    public boolean isDetailsLinkPresent() {
+        try {
+            return detailsLink.isDisplayed();
+        } catch (Exception e) {
+            try {
+                WebElement altLink = driver.findElement(By.xpath("//a[contains(text(), 'Подробнее')]"));
+                return altLink.isDisplayed();
+            } catch (Exception ex) {
+                return false;
+            }
+        }
+    }
+
+    public String getDetailsLinkText() {
+        try {
+            return detailsLink.getText();
+        } catch (Exception e) {
+            try {
+                WebElement altLink = driver.findElement(By.xpath("//a[contains(text(), 'Подробнее')]"));
+                return altLink.getText();
+            } catch (Exception ex) {
+                return "Ссылка не найдена";
+            }
+        }
     }
 }
