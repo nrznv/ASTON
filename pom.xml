@@ -13,6 +13,7 @@
     <dependencies>
 
     <groupId>com.example</groupId>
+    <artifactId>lesson-7-testng</artifactId>
     <artifactId>lesson-8</artifactId>
     <version>1.0</version>
 
@@ -23,6 +24,10 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>7.10.1</version>
         <!-- REST Assured -->
         <dependency>
             <groupId>io.rest-assured</groupId>
