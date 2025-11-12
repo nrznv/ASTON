@@ -1,170 +1,341 @@
 package mts.pages;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
 import java.time.Duration;
 import java.util.List;
 
-public class HomePage {
-    private final WebDriver driver;
-    private final WebDriverWait wait;
+public class HomePage extends BasePage {
 
     public HomePage(WebDriver driver) {
-        this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        PageFactory.initElements(driver, this);
+        super(driver);
     }
 
-    @FindBy(xpath = "//*[contains(text(), 'Онлайн пополнение')]")
-    private WebElement blockTitle;
+    // Куки-баннер
+    @FindBy(css = "div.cookie.show")
+    private WebElement cookieBanner;
 
-    @FindBy(xpath = "//div[contains(@class, 'payment')]//img | //div[contains(@class, 'logo')]//img")
-    private List<WebElement> paymentLogos;
+    @FindBy(css = ".cookie__accept")
+    private WebElement acceptCookiesButton;
 
-    @FindBy(partialLinkText = "Подробнее")
+    // Блок онлайн пополнения
+    @FindBy(xpath = "/html/body/div[6]/main/div/div[4]/div[2]/div/div/div[2]/section/div/h2")
+    private WebElement onlinePaymentTitle;
+
+    // Логотипы платежных систем
+    @FindBy(xpath = "/html/body/div[6]/main/div/div[4]/div[2]/div/div/div[2]/section/div/div[2]/ul/li/img")
+    private List<WebElement> paymentSystemLogos;
+
+    // Ссылка "Подробнее о сервисе"
+    @FindBy(xpath = "/html/body/div[6]/main/div/div[4]/div[2]/div/div/div[2]/section/div/a")
     private WebElement detailsLink;
 
-    @FindBy(xpath = "//*[contains(text(), 'Услуги связи')]")
-    private WebElement serviceTypeLabel;
+    // Выбор услуги "Услуги связи"
+    @FindBy(xpath = "/html/body/div[6]/main/div/div[4]/div[2]/div/div/div[2]/section/div/div/div/div[2]/button")
+    private WebElement communicationServicesButton;
 
-    @FindBy(xpath = "//input[contains(@type, 'tel') or contains(@placeholder, 'номер')]")
-    private WebElement phoneInput;
+    // Поле ввода номера телефона
+    @FindBy(css = "input[type='tel'], input[name='phone'], input[placeholder*='телефон'], input[placeholder*='номер']")
+    private WebElement phoneNumberInput;
 
-    @FindBy(xpath = "//input[contains(@type, 'number') or contains(@placeholder, 'сумм')]")
-    private WebElement amountInput;
-
-    @FindBy(xpath = "//button[contains(., 'Продолжить') or contains(., 'Continue')]")
+    // Кнопка "Продолжить"
+    @FindBy(xpath = "//button[contains(text(), 'Продолжить')]")
     private WebElement continueButton;
 
-    public void open() {
-        driver.get("https://www.mts.by");
+    // Селектор для выпадающего списка операторов (если есть)
+    @FindBy(css = ".select__list, .operators-list, [data-operators]")
+    private WebElement operatorsList;
+
+    public void acceptCookies() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+            WebElement banner = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("div.cookie.show")
+            ));
+
+            System.out.println("Cookie-баннер найден, пытаемся закрыть...");
+
+            boolean cookiesAccepted = false;
+
+            // Способ 1: Ищем кнопку внутри баннера
+            try {
+                List<WebElement> buttons = banner.findElements(By.tagName("button"));
+                if (!buttons.isEmpty()) {
+                    WebElement acceptButton = wait.until(ExpectedConditions.elementToBeClickable(buttons.get(0)));
+                    acceptButton.click();
+                    System.out.println("Кнопка принятия куки найдена внутри баннера и нажата");
+                    cookiesAccepted = true;
+                }
+            } catch (Exception e) {
+                System.out.println("Не удалось найти кнопку внутри баннера: " + e.getMessage());
+            }
+
+            // Ждем исчезновения баннера
+            if (cookiesAccepted) {
+                try {
+                    wait.until(ExpectedConditions.invisibilityOf(banner));
+                    System.out.println("Cookie-баннер успешно закрыт");
+                } catch (Exception e) {
+                    System.out.println("Баннер не исчез, но продолжаем выполнение");
+                }
+            }
+
+        } catch (TimeoutException e) {
+            System.out.println("Cookie-баннер не найден в течение 10 секунд");
+        } catch (Exception e) {
+            System.out.println("Ошибка при закрытии cookie-баннера: " + e.getMessage());
+        }
     }
 
-    public String getBlockTitle() {
-        wait.until(ExpectedConditions.visibilityOf(blockTitle));
-        return blockTitle.getText();
+    public void forceHideCookieBanner() {
+        try {
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            js.executeScript(
+                    "var banner = document.querySelector('div.cookie.show');" +
+                            "if (banner) banner.style.display = 'none';"
+            );
+            System.out.println("Cookie-баннер принудительно скрыт через JavaScript");
+        } catch (Exception e) {
+            System.out.println("Не удалось скрыть баннер через JavaScript: " + e.getMessage());
+        }
     }
 
-    public int getPaymentLogosCount() {
-        wait.until(ExpectedConditions.visibilityOf(blockTitle));
-        return (int) paymentLogos.stream()
-                .filter(WebElement::isDisplayed)
-                .count();
+    public String getOnlinePaymentTitle() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.visibilityOf(onlinePaymentTitle));
+        return onlinePaymentTitle.getText();
     }
 
-    public boolean arePaymentLogosDisplayed() {
-        int count = getPaymentLogosCount();
-        return count > 0;
+    public int getPaymentSystemsCount() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.visibilityOfAllElements(paymentSystemLogos));
+        return paymentSystemLogos.size();
+    }
+
+    public boolean areAllPaymentSystemsDisplayed() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.visibilityOfAllElements(paymentSystemLogos));
+        return paymentSystemLogos.stream().allMatch(WebElement::isDisplayed);
     }
 
     public void clickDetailsLink() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        checkAndCloseCookieBanner();
+        WebElement link = wait.until(ExpectedConditions.elementToBeClickable(detailsLink));
+        link.click();
+    }
+
+    public By getDetailsLinkLocator() {
+        return By.xpath("/html/body/div[6]/main/div/div[4]/div[2]/div/div/div[2]/section/div/a");
+    }
+
+    public By getContinueButtonLocator() {
+        return By.xpath("//button[contains(text(), 'Продолжить')]");
+    }
+
+    public By getPhoneNumberInputLocator() {
+        return By.cssSelector("input[type='tel'], input[name='phone']");
+    }
+
+    public void selectCommunicationServices() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        checkAndCloseCookieBanner();
+
+        System.out.println("=== ВЫБОР УСЛУГИ СВЯЗИ ===");
+
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(detailsLink));
-            detailsLink.click();
+            WebElement button = wait.until(ExpectedConditions.elementToBeClickable(communicationServicesButton));
+            System.out.println("Найдена кнопка: " + button.getText());
+
+            String buttonClass = button.getAttribute("class");
+            System.out.println("Класс кнопки: " + buttonClass);
+
+            if (!buttonClass.contains("active")) {
+                System.out.println("Кликаем на кнопку выбора услуги связи...");
+
+                // Пробуем обычный клик
+                try {
+                    button.click();
+                    System.out.println("Обычный клик выполнен");
+                } catch (Exception e) {
+                    System.out.println("Обычный клик не сработал, пробуем JavaScript...");
+                    JavascriptExecutor js = (JavascriptExecutor) driver;
+                    js.executeScript("arguments[0].click();", button);
+                    System.out.println("JavaScript клик выполнен");
+                }
+
+                // Ждем появления формы или выпадающего списка
+                safeSleep(2000);
+
+                // Проверяем, появилось ли поле ввода телефона
+                if (isPhoneInputAvailable()) {
+                    System.out.println("Поле ввода телефона доступно");
+                } else {
+                    System.out.println("Поле ввода телефона не появилось");
+                    // Возможно, нужно выбрать оператора из выпадающего списка
+                    selectOperatorIfNeeded();
+                }
+
+            } else {
+                System.out.println("Услуга связи уже выбрана");
+            }
         } catch (Exception e) {
-            WebElement alternativeLink = driver.findElement(By.xpath("//a[contains(@href, 'подробнее') or contains(@href, 'details')]"));
-            alternativeLink.click();
+            System.out.println("Ошибка при выборе услуги связи: " + e.getMessage());
+            throw e;
         }
     }
 
-    public void selectServiceType() {
+    private boolean isPhoneInputAvailable() {
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(serviceTypeLabel));
-            serviceTypeLabel.click();
-        } catch (Exception e) {
-            System.out.println("Не удалось найти 'Услуги связи', продолжаем без выбора");
-        }
-    }
-
-    public void enterPhoneNumber(String phone) {
-        try {
-            wait.until(ExpectedConditions.visibilityOf(phoneInput));
-            phoneInput.clear();
-            phoneInput.sendKeys(phone);
-        } catch (Exception e) {
-            System.out.println("Не удалось найти поле для номера телефона");
-        }
-    }
-
-    public void enterAmount(String amount) {
-        try {
-            wait.until(ExpectedConditions.visibilityOf(amountInput));
-            amountInput.clear();
-            amountInput.sendKeys(amount);
-        } catch (Exception e) {
-            System.out.println("Не удалось найти поле для суммы");
-        }
-    }
-
-    public void clickContinueButton() {
-        try {
-            wait.until(ExpectedConditions.elementToBeClickable(continueButton));
-            continueButton.click();
-        } catch (Exception e) {
-            System.out.println("Не удалось найти кнопку 'Продолжить'");
-        }
-    }
-
-    public boolean isContinueButtonEnabled() {
-        try {
-            return continueButton.isEnabled();
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(3));
+            shortWait.until(ExpectedConditions.visibilityOf(phoneNumberInput));
+            return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    public void debugPageInfo() {
-        System.out.println("ДЕБАГ ИНФОРМАЦИЯ");
-        System.out.println("URL: " + driver.getCurrentUrl());
-        System.out.println("Заголовок: " + driver.getTitle());
-        System.out.println("Всего изображений в блоке платежей: " + paymentLogos.size());
-        System.out.println("Видимых изображений: " + paymentLogos.stream().filter(WebElement::isDisplayed).count());
-
-        paymentLogos.stream()
-                .filter(WebElement::isDisplayed)
-                .forEach(img -> {
-                    String src = img.getAttribute("src");
-                    String alt = img.getAttribute("alt");
-                    System.out.println("Изображение платежной системы: src=" + src + ", alt=" + alt);
-                });
-    }
-
-    public String getPageTitle() {
-        return driver.getTitle();
-    }
-
-    public String getCurrentUrl() {
-        return driver.getCurrentUrl();
-    }
-
-    public boolean isDetailsLinkPresent() {
+    private void selectOperatorIfNeeded() {
         try {
-            return detailsLink.isDisplayed();
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+            // Пробуем найти выпадающий список операторов
+            if (operatorsList.isDisplayed()) {
+                System.out.println("Найден выпадающий список операторов");
+                // Выбираем первого оператора из списка
+                WebElement firstOperator = operatorsList.findElement(By.cssSelector("li, div, button"));
+                firstOperator.click();
+                System.out.println("Выбран оператор из списка");
+
+                // Ждем появления поля ввода
+                wait.until(ExpectedConditions.visibilityOf(phoneNumberInput));
+            }
         } catch (Exception e) {
+            System.out.println("Выпадающий список операторов не найден или не требует выбора: " + e.getMessage());
+        }
+    }
+
+    public void enterPhoneNumber(String phoneNumber) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+        System.out.println("=== ВВОД НОМЕРА ТЕЛЕФОНА ===");
+
+        try {
+            // Пробуем основной локатор
+            WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("input[type='tel'], input[name='phone']")
+            ));
+            input.clear();
+            input.sendKeys(phoneNumber);
+            System.out.println("Номер телефона введен: " + phoneNumber);
+
+        } catch (TimeoutException e1) {
+            // Пробуем альтернативные локаторы
             try {
-                WebElement altLink = driver.findElement(By.xpath("//a[contains(text(), 'Подробнее')]"));
-                return altLink.isDisplayed();
-            } catch (Exception ex) {
-                return false;
+                WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                        By.cssSelector("input[placeholder*='телефон'], input[placeholder*='номер']")
+                ));
+                input.clear();
+                input.sendKeys(phoneNumber);
+                System.out.println("Номер телефона введен через альтернативный локатор: " + phoneNumber);
+            } catch (TimeoutException e2) {
+                System.out.println("Не удалось найти поле ввода номера телефона");
+                throw e2;
             }
         }
     }
 
-    public String getDetailsLinkText() {
+    public void clickContinueButton() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        checkAndCloseCookieBanner();
+
+        System.out.println("=== НАЖАТИЕ КНОПКИ 'ПРОДОЛЖИТЬ' ===");
+
         try {
-            return detailsLink.getText();
-        } catch (Exception e) {
+            WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//button[contains(text(), 'Продолжить')]")
+            ));
+            button.click();
+            System.out.println("Кнопка 'Продолжить' нажата");
+        } catch (TimeoutException e1) {
             try {
-                WebElement altLink = driver.findElement(By.xpath("//a[contains(text(), 'Подробнее')]"));
-                return altLink.getText();
-            } catch (Exception ex) {
-                return "Ссылка не найдена";
+                WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.cssSelector("button[type='submit'], .btn-primary")
+                ));
+                button.click();
+                System.out.println("Кнопка 'Продолжить' нажата через CSS селектор");
+            } catch (TimeoutException e2) {
+                System.out.println("Не удалось найти кнопку 'Продолжить'");
+                throw e2;
             }
+        }
+    }
+
+    private void checkAndCloseCookieBanner() {
+        try {
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
+            WebElement banner = shortWait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("div.cookie.show")
+            ));
+            if (banner.isDisplayed()) {
+                System.out.println("Cookie-баннер перекрывает элемент, закрываем...");
+                acceptCookies();
+                safeSleep(1000);
+                if (banner.isDisplayed()) {
+                    forceHideCookieBanner();
+                }
+            }
+        } catch (TimeoutException e) {
+            // Баннер не виден, продолжаем
+        }
+    }
+
+    // Безопасный sleep без выбрасывания InterruptedException
+    private void safeSleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("Sleep прерван: " + e.getMessage());
+        }
+    }
+
+    public void open() {
+        driver.get("https://www.mts.by");
+        driver.manage().window().maximize();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        wait.until(ExpectedConditions.jsReturnsValue("return document.readyState === 'complete'"));
+
+        acceptCookies();
+
+        safeSleep(2000);
+    }
+
+    public boolean isElementVisible(By locator) {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Новый метод для проверки перехода на страницу оплаты
+    public boolean isPaymentPageOpened() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            // Проверяем изменение URL (должен содержать pay или payment)
+            wait.until(driver -> driver.getCurrentUrl().toLowerCase().contains("pay") ||
+                    driver.getCurrentUrl().toLowerCase().contains("payment"));
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
